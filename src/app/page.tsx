@@ -295,7 +295,7 @@ export default function Home() {
   const excludeZonesCount = excludeZones?.features?.length || 0;
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-slate-950 font-sans overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen md:overflow-hidden w-screen bg-slate-950 font-sans">
       {/* Top Banner Header */}
       <Header
         apiState={apiState}
@@ -306,7 +306,7 @@ export default function Home() {
       />
 
       {/* Main Panel Content */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+      <div className="flex flex-col md:flex-row md:overflow-hidden md:flex-1 relative">
         
         {/* Left Side Panel: Settings */}
         <SearchPanel
@@ -330,7 +330,7 @@ export default function Home() {
         />
 
         {/* Center: MapLibre GL Map Viewport */}
-        <div className="flex-grow relative h-[400px] md:h-full overflow-hidden flex flex-col">
+        <div className="relative flex-grow flex flex-col min-h-[420px] md:min-h-0 md:h-full">
           {dataError && (
             <div className="absolute top-4 left-4 right-4 bg-red-950/90 border border-red-500/25 p-4 rounded-xl text-red-200 text-xs flex items-center gap-3 z-20">
               <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />

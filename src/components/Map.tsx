@@ -75,7 +75,16 @@ export default function Map({
       addGeoJsonLayers(mapInstance);
     });
 
+    // ResizeObserver: call map.resize() whenever container size changes (mobile layout shifts)
+    const resizeObserver = new ResizeObserver(() => {
+      if (mapRef.current) {
+        mapRef.current.resize();
+      }
+    });
+    resizeObserver.observe(mapContainerRef.current);
+
     return () => {
+      resizeObserver.disconnect();
       mapInstance.remove();
       mapRef.current = null;
       setMap(null);

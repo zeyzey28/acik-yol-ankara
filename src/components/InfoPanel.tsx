@@ -20,8 +20,9 @@ interface GroupedWarning {
 }
 
 export default function InfoPanel({ warnings, onFocusWarning, startCoords }: InfoPanelProps) {
-  const [distanceFilter, setDistanceFilter] = useState<number>(10); // default 10km
-  const [isOpen, setIsOpen] = useState<boolean>(true); // default open on desktop
+  const [distanceFilter, setDistanceFilter] = useState<number>(10);
+  // On desktop default open, on mobile default closed
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
   // Group warnings by name to avoid duplicates
   const groupedWarnings = useMemo(() => {
@@ -81,12 +82,23 @@ export default function InfoPanel({ warnings, onFocusWarning, startCoords }: Inf
   }, [filteredWarnings]);
 
   return (
-    <div className="relative flex shrink-0">
-      {/* Collapsed tab button – always visible */}
+    <div className="shrink-0">
+      {/* Mobile: toggle button always visible when closed */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed right-0 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1.5 bg-slate-900 border border-slate-700 border-r-0 rounded-l-lg px-2 py-3 text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer shadow-lg"
+          className="w-full flex items-center justify-between px-5 py-3 bg-slate-900 border-t border-slate-800 text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer md:hidden"
+        >
+          <span className="text-sm font-semibold">Kapalı Yollar</span>
+          <ChevronLeft className="w-4 h-4 rotate-[-90deg]" />
+        </button>
+      )}
+
+      {/* Desktop: fixed tab when closed */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="hidden md:flex fixed right-0 top-1/2 -translate-y-1/2 z-30 items-center gap-1.5 bg-slate-900 border border-slate-700 border-r-0 rounded-l-lg px-2 py-3 text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer shadow-lg"
           title="Kapalı Yolları Göster"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -98,8 +110,8 @@ export default function InfoPanel({ warnings, onFocusWarning, startCoords }: Inf
       <div
         className={`bg-slate-950 border-t border-slate-900 text-white flex flex-col gap-4 shrink-0 md:border-t-0 md:border-l md:overflow-y-auto transition-all duration-300 ease-in-out ${
           isOpen
-            ? 'w-full md:w-96 p-5 opacity-100 md:h-[calc(100vh-65px)]'
-            : 'w-0 p-0 opacity-0 overflow-hidden pointer-events-none'
+            ? 'md:w-96 p-5 opacity-100 md:h-[calc(100vh-65px)]'
+            : 'hidden md:block md:w-0 md:p-0 md:opacity-0 md:overflow-hidden md:pointer-events-none'
         }`}
       >
         {/* Title & Toggle */}

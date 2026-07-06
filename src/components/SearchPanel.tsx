@@ -148,7 +148,7 @@ export default function SearchPanel({
   };
 
   return (
-    <div className="bg-slate-950 border-b border-slate-900 p-5 md:border-b-0 md:border-r border-slate-900 text-white flex flex-col gap-5 w-full md:w-96 shrink-0 md:h-[calc(100vh-73px)] md:overflow-y-auto">
+    <div className="bg-slate-950 border-b border-slate-900 p-5 md:border-b-0 md:border-r border-slate-900 text-white flex flex-col gap-5 w-full md:w-96 shrink-0 md:h-[calc(100vh-65px)] md:overflow-y-auto">
       {/* Title Section */}
       <div>
         <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Rota Planla</h2>
@@ -286,7 +286,7 @@ export default function SearchPanel({
       )}
 
       {/* Route Analysis / Routing button at the bottom */}
-      <div className="mt-auto pt-4 flex flex-col gap-3">
+      <div className="md:mt-auto pt-2 flex flex-col gap-3">
         {routeError && (
           <div className="bg-red-950/60 border border-red-900/30 p-3 rounded-lg text-xs text-red-400 leading-normal">
             Rota hesaplanamadı. Lütfen başlangıç ve varış noktalarını kontrol et.
