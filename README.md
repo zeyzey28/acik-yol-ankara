@@ -1,36 +1,109 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Açık Yol Ankara
 
-## Getting Started
+Ankara'daki geçici yol kapanmalarını ve protokol güzergâhlarını harita üzerinde gösterip rota üzerindeki uyarıları anlatan web tabanlı bir yardım aracı.
 
-First, run the development server:
+---
+
+## Proje Hakkında
+
+Bu uygulama, Ankara'da yürürlükteki yol kapanmaları ve protokol güzergâhlarını daha kullanıcı dostu bir arayüzle sunar.
+
+- Kullanıcı harita üzerinden veya adres arayarak başlangıç ve varış noktası seçebilir.
+- Sistem iki nokta arasında bir rota çizer.
+- Rota, kapalı yol verileriyle çakışıyorsa kullanıcıya uyarı gösterir.
+- Sağ panelde başlangıç noktasına en yakın yol uyarıları listelenir.
+
+> **Not:** Canlı trafik verisi şu an dahil değildir. Rota süreleri teoriktir. Resmi trafik yönlendirmeleri her zaman önceliklidir.
+
+---
+
+## Özellikler
+
+- 🔴 Kapalı yol kesimlerini harita üzerinde gösterme
+- 🟠 Protokol / konvoy güzergâhlarını işaretleme
+- 📍 Kullanıcının mevcut konumunu pinleme
+- 🗺️ Başlangıç ve varış noktası seçme (haritadan veya arama ile)
+- 🔍 Adres arama ve otomatik öneri
+- 🚗 İki nokta arası rota çizme
+- ⚠️ Rota kapalı yol kesimiyle çakışıyorsa uyarı verme
+- 📋 Yakındaki yol uyarılarını mesafeye göre listeleme
+- ◀▶ Sağ paneli açıp kapatma
+- 📱 Mobil uyumlu sade arayüz
+
+---
+
+## Kullanılan Teknolojiler
+
+| Teknoloji | Kullanım Amacı |
+|---|---|
+| [Next.js](https://nextjs.org/) | Web framework |
+| [TypeScript](https://www.typescriptlang.org/) | Tip güvenliği |
+| [Tailwind CSS](https://tailwindcss.com/) | Stil |
+| [MapLibre GL](https://maplibre.org/) | Harita görselleştirme |
+| [Turf.js](https://turfjs.org/) | Coğrafi analiz (rota–yol çakışma hesabı) |
+| [OSRM](http://project-osrm.org/) | Rota hesaplama servisi |
+| [Nominatim](https://nominatim.org/) | Adres arama ve ters geocoding |
+| OpenStreetMap tabanlı harita katmanı | Arka plan haritası |
+
+---
+
+## Veri Kaynakları
+
+Kapalı yol ve protokol güzergâh verileri resmi NATO trafik haritasından alınan açık GeoJSON dosyalarından okunmaktadır:
+
+- `public/closed-roads.geojson` — Kapalı yol kesimleri
+- `public/exclude-zones.json` — Protokol / konvoy güzergâhları
+
+Harita ve rota servisleri OpenStreetMap tabanlıdır.
+
+---
+
+## Kurulum
 
 ```bash
+# Bağımlılıkları yükle
+npm install
+
+# Geliştirme sunucusunu başlat
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Tarayıcıda aç:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Proje Durumu
 
-To learn more about Next.js, take a look at the following resources:
+Bu proje **MVP aşamasındadır.**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Canlı trafik verisi entegre değildir
+- Rota süreleri teorik hesaptır, gerçek trafiği yansıtmaz
+- Kapalı yol verileri manuel olarak güncellenmektedir
+- Resmi trafik yönlendirmeleri her zaman önceliklidir
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Geliştirilebilecek Özellikler
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- [ ] Canlı trafik API entegrasyonu
+- [ ] Daha gelişmiş alternatif rota üretimi
+- [ ] Kapalı yol verisinin otomatik güncellenmesi
+- [ ] Anlık bildirim sistemi
+- [ ] Mobil PWA desteği
+- [ ] Kullanıcı bildirimi ile doğrulamalı yol durumu raporlama
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## Ekran Görüntüleri
+
+![Açık Yol Ankara ekran görüntüsü](./public/screenshot.png)
+
+---
+
+## Lisans
+
+Bu proje eğitim ve MVP geliştirme amacıyla hazırlanmıştır.
