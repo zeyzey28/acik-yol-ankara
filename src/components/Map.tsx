@@ -75,21 +75,34 @@ export default function Map({
       addGeoJsonLayers(mapInstance);
     });
 
-    // ResizeObserver: call map.resize() whenever container size changes (mobile layout shifts)
-    const resizeObserver = new ResizeObserver(() => {
-      if (mapRef.current) {
-        mapRef.current.resize();
-      }
-    });
-    resizeObserver.observe(mapContainerRef.current);
-
     return () => {
-      resizeObserver.disconnect();
       mapInstance.remove();
       mapRef.current = null;
       setMap(null);
     };
   }, []);
+
+  useEffect(() => {
+    if (!map || !mapContainerRef.current) return;
+
+    const resizeMap = () => {
+      map.resize();
+    };
+
+    resizeMap();
+    const frame = window.requestAnimationFrame(resizeMap);
+    const timeout = window.setTimeout(resizeMap, 200);
+    const observer = new ResizeObserver(resizeMap);
+    observer.observe(mapContainerRef.current);
+    window.addEventListener('resize', resizeMap);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timeout);
+      observer.disconnect();
+      window.removeEventListener('resize', resizeMap);
+    };
+  }, [map]);
 
   // Update map click handler to access latest mapSelectionMode
   useEffect(() => {
@@ -584,7 +597,7 @@ export default function Map({
 
       {/* Selection Active Banner */}
       {mapSelectionMode && (
-        <div className="absolute bottom-4 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 bg-slate-900 border border-slate-850 px-4 py-2.5 rounded-xl shadow-2xl flex items-center justify-between gap-5 text-white z-10 max-w-sm w-auto">
+        <div className="absolute bottom-4 left-4 right-4 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 bg-slate-900 border border-slate-850 px-4 py-2.5 rounded-xl shadow-2xl flex items-center justify-between gap-5 text-white z-10 max-w-sm w-auto">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>

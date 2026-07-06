@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import Header from '@/components/Header';
-import SearchPanel from '@/components/SearchPanel';
+import SearchPanel, { RouteSummaryCard } from '@/components/SearchPanel';
 import InfoPanel from '@/components/InfoPanel';
 import { Coordinates, ApiState, ClosedRoadsGeoJSON, ExcludeZonesGeoJSON, RoadClosureWarning } from '@/utils/types';
 import { getNearbyWarnings } from '@/utils/geo';
@@ -295,7 +295,7 @@ export default function Home() {
   const excludeZonesCount = excludeZones?.features?.length || 0;
 
   return (
-    <div className="flex flex-col min-h-screen md:h-screen md:overflow-hidden w-screen bg-slate-950 font-sans">
+    <div className="min-h-screen overflow-y-auto bg-slate-950 font-sans lg:h-screen lg:overflow-hidden">
       {/* Top Banner Header */}
       <Header
         apiState={apiState}
@@ -306,7 +306,7 @@ export default function Home() {
       />
 
       {/* Main Panel Content */}
-      <div className="flex flex-col md:flex-row md:overflow-hidden md:flex-1 relative">
+      <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr_420px] lg:h-[calc(100vh-96px)]">
         
         {/* Left Side Panel: Settings */}
         <SearchPanel
@@ -330,7 +330,7 @@ export default function Home() {
         />
 
         {/* Center: MapLibre GL Map Viewport */}
-        <div className="relative flex-grow flex flex-col min-h-[420px] md:min-h-0 md:h-full">
+        <div className="relative order-2 h-[420px] min-h-[360px] w-full lg:order-none lg:h-full">
           {dataError && (
             <div className="absolute top-4 left-4 right-4 bg-red-950/90 border border-red-500/25 p-4 rounded-xl text-red-200 text-xs flex items-center gap-3 z-20">
               <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
@@ -362,6 +362,13 @@ export default function Home() {
             focusCoords={focusCoords}
           />
         </div>
+
+        <RouteSummaryCard
+          routeStats={routeStats}
+          routeStatus={routeStatus}
+          affectedRoad={affectedRoad}
+          className="order-3 mx-4 mt-4 lg:hidden"
+        />
 
         {/* Right Side Panel: Warnings Listing */}
         <InfoPanel

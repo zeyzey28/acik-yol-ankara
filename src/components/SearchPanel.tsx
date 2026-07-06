@@ -22,6 +22,89 @@ interface SearchPanelProps {
   affectedRoad: string | null;
 }
 
+interface RouteSummaryCardProps {
+  routeStats: { distanceKm: number; durationMin: number } | null;
+  routeStatus: SearchPanelProps['routeStatus'];
+  affectedRoad: string | null;
+  className?: string;
+}
+
+export function RouteSummaryCard({
+  routeStats,
+  routeStatus,
+  affectedRoad,
+  className = '',
+}: RouteSummaryCardProps) {
+  if (!routeStats && routeStatus !== 'searching_alt') return null;
+
+  return (
+    <div className={`p-4 rounded-xl flex flex-col gap-2 border ${
+      routeStatus === 'alt_suggested_blocked' || routeStatus === 'closed' || routeStatus === 'blocked' || routeStatus === 'alt_not_found'
+        ? 'bg-red-950/40 border-red-900/30 text-red-200'
+        : routeStatus === 'near' || routeStatus === 'risky' || routeStatus === 'alt_suggested_risky' || routeStatus === 'alt_suggested'
+        ? 'bg-amber-950/40 border-amber-900/30 text-amber-200'
+        : 'bg-blue-950/20 border-blue-900/30 text-blue-200'
+    } ${className}`}>
+      <p className="text-xs font-bold uppercase tracking-wider opacity-85">Rota Özeti</p>
+
+      {routeStats && (
+        <>
+          <div className="flex justify-between text-xs border-b border-slate-900/30 pb-1.5 mb-0.5">
+            <span className="opacity-80">Mesafe:</span>
+            <span className="font-semibold text-white">{routeStats.distanceKm} km</span>
+          </div>
+          <div className="flex flex-col text-xs border-b border-slate-900/30 pb-1.5 mb-0.5 gap-0.5">
+            <div className="flex justify-between">
+              <span className="opacity-80">Tahmini süre:</span>
+              <span className="font-semibold text-white">{routeStats.durationMin} dk</span>
+            </div>
+            <span className="text-[10px] text-slate-400 font-medium self-end">Not: Canlı trafik dahil değildir.</span>
+          </div>
+        </>
+      )}
+
+      {/* Status Information */}
+      <div className="flex flex-col gap-1 text-[11px] mt-0.5">
+        <div className="flex justify-between gap-3">
+          <span className="opacity-80">Durum:</span>
+          <span className={`font-bold text-right ${
+            routeStatus === 'alt_suggested_blocked' || routeStatus === 'closed' || routeStatus === 'blocked' || routeStatus === 'alt_not_found'
+              ? 'text-red-400'
+              : routeStatus === 'near' || routeStatus === 'risky' || routeStatus === 'alt_suggested_risky' || routeStatus === 'alt_suggested'
+              ? 'text-amber-400'
+              : 'text-blue-400'
+          }`}>
+            {routeStatus === 'alt_not_found' && 'Alternatif rota bulunamadı'}
+            {routeStatus === 'alt_suggested_blocked' && 'Uyarılı rota'}
+            {(routeStatus === 'near' || routeStatus === 'risky' || routeStatus === 'alt_suggested_risky' || routeStatus === 'alt_suggested') && 'Daha uygun rota önerildi'}
+            {(routeStatus === 'suitable' || routeStatus === 'clear') && 'Rota uygun görünüyor'}
+            {routeStatus === 'searching_alt' && 'Alternatif rota aranıyor'}
+          </span>
+        </div>
+
+        <p className="opacity-90 leading-relaxed font-medium mt-1">
+          {routeStatus === 'alt_not_found' && 'Rota hesaplanamadı. Lütfen başlangıç ve varış noktalarını kontrol et.'}
+          {routeStatus === 'alt_suggested_blocked' && 'Bu güzergâh kapalı yol kesimlerine yakın veya kesişen bölgelerden geçebilir. Yola çıkmadan önce resmi yönlendirmeleri kontrol edin.'}
+          {(routeStatus === 'near' || routeStatus === 'risky' || routeStatus === 'alt_suggested_risky' || routeStatus === 'alt_suggested') && 'İlk rota kapalı yol kesimlerine denk geldiği için sistem daha uygun görünen bir rota seçti. Yine de yol üzerindeki resmi yönlendirmeleri takip edin.'}
+          {(routeStatus === 'suitable' || routeStatus === 'clear') && 'Bu rota mevcut kapalı yol verileriyle belirgin şekilde çakışmıyor.'}
+          {routeStatus === 'searching_alt' && 'İlk rota kapalı yol ile çakışıyor. Alternatif rota aranıyor...'}
+        </p>
+
+        {affectedRoad && routeStatus !== 'searching_alt' && (
+          <p className="font-semibold mt-0.5 flex gap-1">
+            <span className="opacity-80 font-normal">Etkilenen yol:</span>
+            <span className={
+              routeStatus === 'alt_suggested_blocked' || routeStatus === 'closed' || routeStatus === 'blocked' || routeStatus === 'alt_not_found'
+                ? 'text-red-300'
+                : 'text-amber-300'
+            }>{affectedRoad}</span>
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function SearchPanel({
   startCoords,
   destCoords,
@@ -148,14 +231,14 @@ export default function SearchPanel({
   };
 
   return (
-    <div className="bg-slate-950 border-b border-slate-900 p-5 md:border-b-0 md:border-r border-slate-900 text-white flex flex-col gap-5 w-full md:w-96 shrink-0 md:h-[calc(100vh-65px)] md:overflow-y-auto">
+    <div className="order-1 bg-slate-950 border-b border-slate-900 p-4 sm:p-5 lg:order-none lg:border-b-0 lg:border-r border-slate-900 text-white flex flex-col gap-5 w-full shrink-0 lg:h-full lg:overflow-y-auto">
       {/* Title Section */}
       <div>
         <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Rota Planla</h2>
         
         {/* Start Point Input */}
         <div className="relative mb-5">
-          <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+          <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex flex-wrap items-center justify-between gap-2">
             <span>Başlangıç Noktası</span>
             <button
               onClick={handleUseMyLocation}
@@ -166,8 +249,8 @@ export default function SearchPanel({
               Konumumu Kullan
             </button>
           </label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="relative min-w-0 flex-1">
               <input
                 type="text"
                 value={startQuery}
@@ -223,8 +306,8 @@ export default function SearchPanel({
           <label className="block text-xs font-semibold text-slate-300 mb-1.5">
             Varış Noktası
           </label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="relative min-w-0 flex-1">
               <input
                 type="text"
                 value={destQuery}
@@ -286,79 +369,19 @@ export default function SearchPanel({
       )}
 
       {/* Route Analysis / Routing button at the bottom */}
-      <div className="md:mt-auto pt-2 flex flex-col gap-3">
+      <div className="mt-auto pt-4 flex flex-col gap-3">
         {routeError && (
           <div className="bg-red-950/60 border border-red-900/30 p-3 rounded-lg text-xs text-red-400 leading-normal">
             Rota hesaplanamadı. Lütfen başlangıç ve varış noktalarını kontrol et.
           </div>
         )}
 
-        {(routeStats || routeStatus === 'searching_alt') && (
-          <div className={`p-4 rounded-xl flex flex-col gap-2 border ${
-            routeStatus === 'alt_suggested_blocked' || routeStatus === 'closed' || routeStatus === 'blocked' || routeStatus === 'alt_not_found'
-              ? 'bg-red-950/40 border-red-900/30 text-red-200'
-              : routeStatus === 'near' || routeStatus === 'risky' || routeStatus === 'alt_suggested_risky' || routeStatus === 'alt_suggested'
-              ? 'bg-amber-950/40 border-amber-900/30 text-amber-200'
-              : 'bg-blue-950/20 border-blue-900/30 text-blue-200'
-          }`}>
-            <p className="text-xs font-bold uppercase tracking-wider opacity-85">Rota Özeti</p>
-            
-            {routeStats && (
-              <>
-                <div className="flex justify-between text-xs border-b border-slate-900/30 pb-1.5 mb-0.5">
-                  <span className="opacity-80">Mesafe:</span>
-                  <span className="font-semibold text-white">{routeStats.distanceKm} km</span>
-                </div>
-                <div className="flex flex-col text-xs border-b border-slate-900/30 pb-1.5 mb-0.5 gap-0.5">
-                  <div className="flex justify-between">
-                    <span className="opacity-80">Tahmini süre:</span>
-                    <span className="font-semibold text-white">{routeStats.durationMin} dk</span>
-                  </div>
-                  <span className="text-[10px] text-slate-400 font-medium self-end">Not: Canlı trafik dahil değildir.</span>
-                </div>
-              </>
-            )}
-
-            {/* Status Information */}
-            <div className="flex flex-col gap-1 text-[11px] mt-0.5">
-              <div className="flex justify-between">
-                <span className="opacity-80">Durum:</span>
-                <span className={`font-bold ${
-                  routeStatus === 'alt_suggested_blocked' || routeStatus === 'closed' || routeStatus === 'blocked' || routeStatus === 'alt_not_found'
-                    ? 'text-red-400'
-                    : routeStatus === 'near' || routeStatus === 'risky' || routeStatus === 'alt_suggested_risky' || routeStatus === 'alt_suggested'
-                    ? 'text-amber-400'
-                    : 'text-blue-400'
-                }`}>
-                  {routeStatus === 'alt_not_found' && 'Alternatif rota bulunamadı'}
-                  {routeStatus === 'alt_suggested_blocked' && 'Uyarılı rota'}
-                  {(routeStatus === 'near' || routeStatus === 'risky' || routeStatus === 'alt_suggested_risky' || routeStatus === 'alt_suggested') && 'Daha uygun rota önerildi'}
-                  {(routeStatus === 'suitable' || routeStatus === 'clear') && 'Rota uygun görünüyor'}
-                  {routeStatus === 'searching_alt' && 'Alternatif rota aranıyor'}
-                </span>
-              </div>
-              
-              <p className="opacity-90 leading-relaxed font-medium mt-1">
-                {routeStatus === 'alt_not_found' && 'Rota hesaplanamadı. Lütfen başlangıç ve varış noktalarını kontrol et.'}
-                {routeStatus === 'alt_suggested_blocked' && 'Bu güzergâh kapalı yol kesimlerine yakın veya kesişen bölgelerden geçebilir. Yola çıkmadan önce resmi yönlendirmeleri kontrol edin.'}
-                {(routeStatus === 'near' || routeStatus === 'risky' || routeStatus === 'alt_suggested_risky' || routeStatus === 'alt_suggested') && 'İlk rota kapalı yol kesimlerine denk geldiği için sistem daha uygun görünen bir rota seçti. Yine de yol üzerindeki resmi yönlendirmeleri takip edin.'}
-                {(routeStatus === 'suitable' || routeStatus === 'clear') && 'Bu rota mevcut kapalı yol verileriyle belirgin şekilde çakışmıyor.'}
-                {routeStatus === 'searching_alt' && 'İlk rota kapalı yol ile çakışıyor. Alternatif rota aranıyor...'}
-              </p>
-
-              {affectedRoad && routeStatus !== 'searching_alt' && (
-                <p className="font-semibold mt-0.5 flex gap-1">
-                  <span className="opacity-80 font-normal">Etkilenen yol:</span>
-                  <span className={
-                    routeStatus === 'alt_suggested_blocked' || routeStatus === 'closed' || routeStatus === 'blocked' || routeStatus === 'alt_not_found'
-                      ? 'text-red-300'
-                      : 'text-amber-300'
-                  }>{affectedRoad}</span>
-                </p>
-              )}
-            </div>
-          </div>
-        )}
+        <RouteSummaryCard
+          routeStats={routeStats}
+          routeStatus={routeStatus}
+          affectedRoad={affectedRoad}
+          className="hidden lg:flex"
+        />
 
         <button
           onClick={onFindRoute}
@@ -375,13 +398,13 @@ export default function SearchPanel({
         <div className="border-t border-slate-900 pt-3 text-[11px] text-slate-550 flex flex-col gap-1.5">
           <div className="flex justify-between gap-2">
             <span>Başlangıç:</span>
-            <span className="font-mono text-slate-400 truncate max-w-[200px]" title={startAddress || 'Belirlenmedi'}>
+            <span className="min-w-0 max-w-[60vw] truncate text-right font-mono text-slate-400 lg:max-w-[200px]" title={startAddress || 'Belirlenmedi'}>
               {startAddress || 'Belirlenmedi'}
             </span>
           </div>
           <div className="flex justify-between gap-2">
             <span>Varış:</span>
-            <span className="font-mono text-slate-400 truncate max-w-[200px]" title={destAddress || 'Belirlenmedi'}>
+            <span className="min-w-0 max-w-[60vw] truncate text-right font-mono text-slate-400 lg:max-w-[200px]" title={destAddress || 'Belirlenmedi'}>
               {destAddress || 'Belirlenmedi'}
             </span>
           </div>

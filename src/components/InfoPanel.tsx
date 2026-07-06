@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AlertOctagon, ShieldAlert, Eye, ChevronLeft, ChevronRight, Compass } from 'lucide-react';
 import { RoadClosureWarning, Coordinates } from '@/utils/types';
 
@@ -20,9 +20,18 @@ interface GroupedWarning {
 }
 
 export default function InfoPanel({ warnings, onFocusWarning, startCoords }: InfoPanelProps) {
-  const [distanceFilter, setDistanceFilter] = useState<number>(10);
-  // On desktop default open, on mobile default closed
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [distanceFilter, setDistanceFilter] = useState<number>(10); // default 10km
+  const [isOpen, setIsOpen] = useState<boolean>(true); // default open on desktop
+
+  useEffect(() => {
+    const first = window.setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+    const second = window.setTimeout(() => window.dispatchEvent(new Event('resize')), 320);
+
+    return () => {
+      window.clearTimeout(first);
+      window.clearTimeout(second);
+    };
+  }, [isOpen]);
 
   // Group warnings by name to avoid duplicates
   const groupedWarnings = useMemo(() => {
@@ -82,36 +91,25 @@ export default function InfoPanel({ warnings, onFocusWarning, startCoords }: Inf
   }, [filteredWarnings]);
 
   return (
-    <div className="shrink-0">
-      {/* Mobile: toggle button always visible when closed */}
+    <div className="relative order-4 flex w-full shrink-0 lg:order-none lg:w-auto">
+      {/* Collapsed tab button – always visible */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="w-full flex items-center justify-between px-5 py-3 bg-slate-900 border-t border-slate-800 text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer md:hidden"
-        >
-          <span className="text-sm font-semibold">Kapalı Yollar</span>
-          <ChevronLeft className="w-4 h-4 rotate-[-90deg]" />
-        </button>
-      )}
-
-      {/* Desktop: fixed tab when closed */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="hidden md:flex fixed right-0 top-1/2 -translate-y-1/2 z-30 items-center gap-1.5 bg-slate-900 border border-slate-700 border-r-0 rounded-l-lg px-2 py-3 text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer shadow-lg"
+          className="m-4 flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-slate-300 shadow-lg transition-colors hover:bg-slate-800 lg:fixed lg:right-0 lg:top-1/2 lg:z-30 lg:m-0 lg:w-auto lg:-translate-y-1/2 lg:rounded-l-lg lg:border-r-0 lg:px-2 lg:py-3 cursor-pointer"
           title="Kapalı Yolları Göster"
         >
-          <ChevronLeft className="w-4 h-4" />
-          <span className="text-[11px] font-semibold" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Kapalı Yollar</span>
+          <ChevronLeft className="hidden w-4 h-4 lg:block" />
+          <span className="text-xs font-semibold lg:text-[11px] lg:[writing-mode:vertical-rl] lg:[transform:rotate(180deg)]">Kapalı Yolları Göster</span>
         </button>
       )}
 
       {/* Panel itself */}
       <div
-        className={`bg-slate-950 border-t border-slate-900 text-white flex flex-col gap-4 shrink-0 md:border-t-0 md:border-l md:overflow-y-auto transition-all duration-300 ease-in-out ${
+        className={`bg-slate-950 border-t border-slate-900 text-white flex flex-col gap-4 shrink-0 lg:border-t-0 lg:border-l lg:overflow-y-auto transition-all duration-300 ease-in-out ${
           isOpen
-            ? 'md:w-96 p-5 opacity-100 md:h-[calc(100vh-65px)]'
-            : 'hidden md:block md:w-0 md:p-0 md:opacity-0 md:overflow-hidden md:pointer-events-none'
+            ? 'w-full p-5 opacity-100 lg:h-full'
+            : 'hidden p-0 opacity-0 pointer-events-none lg:flex lg:w-0 lg:overflow-hidden'
         }`}
       >
         {/* Title & Toggle */}
@@ -157,7 +155,7 @@ export default function InfoPanel({ warnings, onFocusWarning, startCoords }: Inf
         )}
 
         {/* Warnings List */}
-      <div className="flex-1 overflow-y-auto min-h-[250px] md:min-h-0 flex flex-col gap-3">
+      <div className="flex-1 overflow-y-auto min-h-[250px] lg:min-h-0 flex flex-col gap-3">
         {displayedWarnings.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 px-4 text-center bg-slate-900/40 rounded-xl border border-slate-800 border-dashed h-full">
             <Compass className="w-8 h-8 text-slate-600 mb-2" />

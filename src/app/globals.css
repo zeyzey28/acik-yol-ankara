@@ -14,7 +14,13 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-  overflow: hidden;
+  overflow-x: hidden;
+}
+
+@media (min-width: 1024px) {
+  body {
+    overflow: hidden;
+  }
 }
 
 /* Custom scrollbars for clean dashboard look */
