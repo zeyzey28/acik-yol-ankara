@@ -1,109 +1,51 @@
 # Açık Yol Ankara
 
-Ankara'daki geçici yol kapanmalarını ve protokol güzergâhlarını harita üzerinde gösterip rota üzerindeki uyarıları anlatan web tabanlı bir yardım aracı.
+Açık Yol Ankara is a web-based map application that helps users view temporary road closures, protocol/convoy routes, and route-related warnings in Ankara.
 
----
+The goal of the project is to present road closure data in a simpler interface, allow users to select a start and destination point, generate a route, and warn the user if the route passes near or intersects with affected road sections.
 
-## Proje Hakkında
+## Screenshots
 
-Bu uygulama, Ankara'da yürürlükteki yol kapanmaları ve protokol güzergâhlarını daha kullanıcı dostu bir arayüzle sunar.
+![Mobile home screen](./public/screenshots:05-mobile.PNG)
 
-- Kullanıcı harita üzerinden veya adres arayarak başlangıç ve varış noktası seçebilir.
-- Sistem iki nokta arasında bir rota çizer.
-- Rota, kapalı yol verileriyle çakışıyorsa kullanıcıya uyarı gösterir.
-- Sağ panelde başlangıç noktasına en yakın yol uyarıları listelenir.
+![Mobile route result](./public/screenshots:06-mobile.PNG)
 
-> **Not:** Canlı trafik verisi şu an dahil değildir. Rota süreleri teoriktir. Resmi trafik yönlendirmeleri her zaman önceliklidir.
+## Features
 
----
+- Display closed roads on the map
+- Display protocol / convoy routes
+- Use the user’s current location as the starting point
+- Select start and destination points
+- Search for addresses and places
+- Select points directly from the map
+- Generate a route between selected points
+- Show a warning if the route passes near affected road sections
+- Show route distance and estimated duration
+- Display a “Live traffic is not included” notice
+- List nearby road warnings
+- Mobile-friendly interface
 
-## Özellikler
+## Technologies Used
 
-- 🔴 Kapalı yol kesimlerini harita üzerinde gösterme
-- 🟠 Protokol / konvoy güzergâhlarını işaretleme
-- 📍 Kullanıcının mevcut konumunu pinleme
-- 🗺️ Başlangıç ve varış noktası seçme (haritadan veya arama ile)
-- 🔍 Adres arama ve otomatik öneri
-- 🚗 İki nokta arası rota çizme
-- ⚠️ Rota kapalı yol kesimiyle çakışıyorsa uyarı verme
-- 📋 Yakındaki yol uyarılarını mesafeye göre listeleme
-- ◀▶ Sağ paneli açıp kapatma
-- 📱 Mobil uyumlu sade arayüz
+- Next.js
+- TypeScript
+- Tailwind CSS
+- MapLibre GL
+- Turf.js
+- OpenStreetMap-based map and geocoding services
+- OSRM routing service
 
----
+## Data Sources
 
-## Kullanılan Teknolojiler
+The application uses GeoJSON-based road data to display temporary road closures and protocol/convoy routes.
 
-| Teknoloji | Kullanım Amacı |
-|---|---|
-| [Next.js](https://nextjs.org/) | Web framework |
-| [TypeScript](https://www.typescriptlang.org/) | Tip güvenliği |
-| [Tailwind CSS](https://tailwindcss.com/) | Stil |
-| [MapLibre GL](https://maplibre.org/) | Harita görselleştirme |
-| [Turf.js](https://turfjs.org/) | Coğrafi analiz (rota–yol çakışma hesabı) |
-| [OSRM](http://project-osrm.org/) | Rota hesaplama servisi |
-| [Nominatim](https://nominatim.org/) | Adres arama ve ters geocoding |
-| OpenStreetMap tabanlı harita katmanı | Arka plan haritası |
+Address and place search is based on OpenStreetMap-related services. Route generation is handled through the OSRM routing service.
 
----
+Note: Route duration does not include live traffic data. Official traffic directions and announcements should always be followed.
 
-## Veri Kaynakları
-
-Kapalı yol ve protokol güzergâh verileri resmi NATO trafik haritasından alınan açık GeoJSON dosyalarından okunmaktadır:
-
-- `public/closed-roads.geojson` — Kapalı yol kesimleri
-- `public/exclude-zones.json` — Protokol / konvoy güzergâhları
-
-Harita ve rota servisleri OpenStreetMap tabanlıdır.
-
----
-
-## Kurulum
+## Installation
 
 ```bash
-# Bağımlılıkları yükle
 npm install
-
-# Geliştirme sunucusunu başlat
 npm run dev
 ```
-
-Tarayıcıda aç:
-
-```
-http://localhost:3000
-```
-
----
-
-## Proje Durumu
-
-Bu proje **MVP aşamasındadır.**
-
-- Canlı trafik verisi entegre değildir
-- Rota süreleri teorik hesaptır, gerçek trafiği yansıtmaz
-- Kapalı yol verileri manuel olarak güncellenmektedir
-- Resmi trafik yönlendirmeleri her zaman önceliklidir
-
----
-
-## Geliştirilebilecek Özellikler
-
-- [ ] Canlı trafik API entegrasyonu
-- [ ] Daha gelişmiş alternatif rota üretimi
-- [ ] Kapalı yol verisinin otomatik güncellenmesi
-- [ ] Anlık bildirim sistemi
-- [ ] Mobil PWA desteği
-- [ ] Kullanıcı bildirimi ile doğrulamalı yol durumu raporlama
-
----
-
-## Ekran Görüntüleri
-
-![Açık Yol Ankara ekran görüntüsü](./public/screenshot.png)
-
----
-
-## Lisans
-
-Bu proje eğitim ve MVP geliştirme amacıyla hazırlanmıştır.
