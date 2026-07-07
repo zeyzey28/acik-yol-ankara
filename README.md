@@ -1,90 +1,67 @@
 # Açık Yol Ankara
 
-Açık Yol Ankara is a web-based map application developed to make temporary road closures, protocol routes, and route-related warnings in Ankara easier to understand on a map interface.
+Açık Yol Ankara is a web-based map application developed for visualizing temporary road closures and protocol routes in Ankara during the NATO event week.
 
-The project focuses on combining geospatial data visualization, route planning, and user-friendly warning messages. Users can select a starting point and a destination, generate a route, and see whether the suggested route is close to or affected by temporary road restrictions.
+The project was created as an MVP to make event-based road restriction information easier to understand on a map. Users can select a starting point and a destination, generate a route, and receive a warning if the route passes near or intersects with affected road sections.
 
-This project was developed as an MVP and portfolio project, not as an official traffic/navigation service.
+This is not an official traffic application and it is not intended to provide permanent, real-time traffic information for Ankara.
 
 ## Project Purpose
 
-During major events, summits, ceremonies, or temporary traffic restrictions, road closure information is often published in a way that is difficult for regular users to interpret quickly.
+During large-scale events such as NATO-related meetings, summits, ceremonies, or official visits, some roads may be temporarily closed or reserved for protocol routes.
 
-The purpose of Açık Yol Ankara is to:
+Road closure announcements can be difficult to interpret quickly, especially when users need to understand whether their route is affected.
 
-- visualize closed roads on an interactive map,
-- show protocol and convoy routes separately,
-- allow users to create a route between two points,
+The purpose of this project is to:
+
+- visualize temporary road closures on an interactive map,
+- show protocol / convoy routes separately,
+- allow users to select start and destination points,
+- generate a route between selected points,
 - warn users if the route is close to affected road sections,
-- present this information in a simple mobile-friendly interface.
+- present this information in a simple and mobile-friendly interface.
 
 ## Screenshots
 
 ### Desktop Overview
 
-![Desktop overview](./public/screenshots/01-home-desktop.png)
+<p align="center">
+  <img src="./public/screenshots/01-home-desktop.png" alt="Desktop overview" width="800" />
+</p>
 
 ### Route Planning
 
-![Route planning form](./public/screenshots/02-route-form.png)
+<p align="center">
+  <img src="./public/screenshots/02-route-form.png" alt="Route planning form" width="800" />
+</p>
 
 ### Route Result
 
-![Route result with warning message](./public/screenshots/03-route-result.png)
+<p align="center">
+  <img src="./public/screenshots/03-route-result.png" alt="Route result with warning message" width="800" />
+</p>
 
 ### Mobile View
 
-![Mobile home screen](./public/screenshots/05-mobile.PNG)
-
-![Mobile route result](./public/screenshots/06-mobile.PNG)
+<p align="center">
+  <img src="./public/screenshots/05-mobile.PNG" alt="Mobile home screen" width="280" />
+  <img src="./public/screenshots/06-mobile.PNG" alt="Mobile route result" width="280" />
+</p>
 
 ## Main Features
 
-### Interactive Map
-
-The application displays Ankara-based road restriction data on an interactive map. Closed roads and protocol/convoy routes are shown with different visual styles so users can distinguish them easily.
-
-### Route Planning
-
-Users can select:
-
-- a starting point,
-- a destination point,
-- their current location,
-- or a point directly from the map.
-
-After selecting both points, the application generates a route and displays it on the map.
-
-### Route Warning System
-
-After a route is created, the application checks whether the route is close to or intersects with affected road sections.
-
-Depending on the situation, the user may see messages such as:
-
-- the route appears suitable,
-- the route may pass near affected roads,
-- the route should be checked carefully before travelling.
-
-### Address and Place Search
-
-Users can search for addresses and places such as:
-
-- streets,
-- districts,
-- cafes,
-- shopping malls,
-- hospitals,
-- pharmacies,
-- schools,
-- metro stations,
-- bus stops,
-- public places.
-
-The search is focused on Ankara and uses OpenStreetMap-based services.
-
-### Mobile-Friendly Layout
-
-The interface is designed to work on both desktop and mobile screens. On mobile devices, the route planning panel, map, route result, and road warning list are arranged in a more readable layout.
+- Interactive map interface
+- Temporary closed road visualization
+- Protocol / convoy route visualization
+- Current location support
+- Start and destination selection
+- Address and place search
+- Point selection directly from the map
+- Route generation between selected points
+- Route summary with distance and estimated duration
+- Warning message if the route is close to affected roads
+- Nearby road warning list
+- Mobile-friendly layout
 
 ## Technologies Used
 
@@ -97,31 +74,29 @@ The interface is designed to work on both desktop and mobile screens. On mobile 
 - OSRM routing service
 - GeoJSON road data
 
-## Geospatial Side of the Project
+## Geospatial Approach
 
-This project includes several geospatial concepts:
+The project includes several WebGIS and geomatics-related concepts:
 
-- displaying GeoJSON line data on a web map,
-- styling road closure and protocol route layers,
-- using coordinates in `[longitude, latitude]` format,
-- selecting points from the map,
+- rendering GeoJSON road data on a web map,
+- styling different road restriction categories,
+- working with coordinates in [longitude, latitude] format,
+- selecting points directly from the map,
 - geocoding addresses and places,
-- calculating routes between two coordinates,
-- checking route proximity to affected road sections.
+- generating routes between coordinates,
+- checking whether a route is close to affected road sections.
 
-The project is especially relevant for geomatics, WebGIS, urban mobility, and map-based decision support systems.
+## Data and Limitations
 
-## Data Sources
+The application uses GeoJSON-based road restriction data and OpenStreetMap-based services for address search and routing.
 
-The application uses GeoJSON-based road data to display road closures and protocol/convoy routes.
+Important limitations:
 
-Address and place search is based on OpenStreetMap-related geocoding services.
-
-Route generation is handled through an OSRM-based routing service.
-
-Important note:
-
-The estimated route duration does not include live traffic data. Official traffic announcements, police directions, and authorized institution updates should always be followed.
+- The project was designed for temporary NATO event week restrictions.
+- Route duration does not include live traffic data.
+- The application does not provide official navigation guidance.
+- Road restriction data may become outdated after the event period.
+- Official announcements and traffic directions should always be followed.
 
 ## Installation
 
