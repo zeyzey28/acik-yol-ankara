@@ -27,6 +27,8 @@ interface RouteSummaryCardProps {
   routeStatus: SearchPanelProps['routeStatus'];
   affectedRoad: string | null;
   className?: string;
+  startCoords?: Coordinates | null;
+  destCoords?: Coordinates | null;
 }
 
 export function RouteSummaryCard({
@@ -34,8 +36,14 @@ export function RouteSummaryCard({
   routeStatus,
   affectedRoad,
   className = '',
+  startCoords,
+  destCoords,
 }: RouteSummaryCardProps) {
   if (!routeStats && routeStatus !== 'searching_alt') return null;
+
+  const googleMapsUrl = startCoords && destCoords
+    ? `https://www.google.com/maps/dir/?api=1&origin=${startCoords[1]},${startCoords[0]}&destination=${destCoords[1]},${destCoords[0]}&travelmode=driving`
+    : null;
 
   return (
     <div className={`p-4 rounded-xl flex flex-col gap-2 border ${
@@ -101,9 +109,57 @@ export function RouteSummaryCard({
           </p>
         )}
       </div>
+
+      {/* Navigation Button */}
+      {routeStats && googleMapsUrl && (
+        <div className="mt-2.5 pt-2.5 border-t border-slate-900/30 flex flex-col gap-1.5">
+          <a
+            href={googleMapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-2 px-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-750 text-white rounded-lg text-xs font-semibold text-center transition flex items-center justify-center gap-1.5 cursor-pointer shadow"
+          >
+            Yol tarifini başlat
+          </a>
+          <span className="text-[10px] text-slate-400 font-medium text-center">
+            Harici harita uygulamasında açılır.
+          </span>
+        </div>
+      )}
     </div>
   );
 }
+
+// Helper to extract a clean name and short address from Nominatim item
+const getPlaceDetails = (item: any) => {
+  const name = item.display_name.split(',')[0];
+  
+  const addressParts: string[] = [];
+  const addr = item.address || {};
+  
+  // Road or street
+  if (addr.road) addressParts.push(addr.road);
+  else if (addr.pedestrian) addressParts.push(addr.pedestrian);
+  
+  // District/Suburb/Neighborhood
+  const neighborhood = addr.neighbourhood || addr.suburb || addr.city_district || addr.town || addr.village;
+  if (neighborhood) addressParts.push(neighborhood);
+  
+  // City
+  const city = addr.city || addr.province || 'Ankara';
+  if (city) addressParts.push(city);
+  
+  // Ensure we don't repeat the name in the address parts
+  let shortAddress = addressParts.filter((part) => part.toLowerCase() !== name.toLowerCase()).join(', ');
+  
+  // Fallback if shortAddress is empty
+  if (!shortAddress) {
+    const splitName = item.display_name.split(',');
+    shortAddress = splitName.slice(1, 4).map((s: string) => s.trim()).join(', ');
+  }
+  
+  return { name, shortAddress };
+};
 
 export default function SearchPanel({
   startCoords,
@@ -157,7 +213,7 @@ export default function SearchPanel({
     else setSearchingDest(true);
 
     try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ', Ankara, Turkey')}&format=json&limit=5&addressdetails=1`;
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ', Ankara Türkiye')}&format=json&limit=6&addressdetails=1`;
       const response = await fetch(url, {
         headers: {
           'Accept-Language': 'tr-TR,tr;q=0.9,en;q=0.8'
@@ -167,17 +223,17 @@ export default function SearchPanel({
         const data = await response.json();
         if (isStart) {
           setStartSuggestions(data);
-          if (data.length === 0) setSearchError('Adres bulunamadı.');
+          if (data.length === 0) setSearchError('Sonuç bulunamadı. Daha genel bir yer adı veya mahalle adı deneyebilirsin.');
         } else {
           setDestSuggestions(data);
-          if (data.length === 0) setSearchError('Adres bulunamadı.');
+          if (data.length === 0) setSearchError('Sonuç bulunamadı. Daha genel bir yer adı veya mahalle adı deneyebilirsin.');
         }
       } else {
-        setSearchError('Adres araması yapılamadı.');
+        setSearchError('Sonuç bulunamadı. Daha genel bir yer adı veya mahalle adı deneyebilirsin.');
       }
     } catch (e) {
       console.error('Nominatim autocomplete error:', e);
-      setSearchError('Adres araması yapılamadı.');
+      setSearchError('Sonuç bulunamadı. Daha genel bir yer adı veya mahalle adı deneyebilirsin.');
       if (isStart) setStartSuggestions([]);
       else setDestSuggestions([]);
     } finally {
@@ -208,7 +264,8 @@ export default function SearchPanel({
 
   const selectSuggestion = (item: any, isStart: boolean) => {
     const coords: Coordinates = [parseFloat(item.lon), parseFloat(item.lat)];
-    const displayName = item.display_name.split(',')[0] + ', ' + (item.address.suburb || item.address.town || 'Ankara');
+    const details = getPlaceDetails(item);
+    const displayName = `${details.name}, ${details.shortAddress}`;
 
     if (isStart) {
       onSetStart(coords, displayName);
@@ -231,157 +288,157 @@ export default function SearchPanel({
   };
 
   return (
-    <div className="order-1 bg-slate-950 border-b border-slate-900 p-4 sm:p-5 lg:order-none lg:border-b-0 lg:border-r border-slate-900 text-white flex flex-col gap-5 w-full shrink-0 lg:h-full lg:overflow-y-auto">
-      {/* Title Section */}
-      <div>
-        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Rota Planla</h2>
-        
-        {/* Start Point Input */}
-        <div className="relative mb-5">
-          <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex flex-wrap items-center justify-between gap-2">
-            <span>Başlangıç Noktası</span>
-            <button
-              onClick={handleUseMyLocation}
-              className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 transition cursor-pointer font-medium"
-              title="Konumumu Kullan"
-            >
-              <Navigation className="w-3 h-3 fill-current" />
-              Konumumu Kullan
-            </button>
-          </label>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <div className="relative min-w-0 flex-1">
-              <input
-                type="text"
-                value={startQuery}
-                onChange={handleStartChange}
-                placeholder="Başlangıç adresi girin..."
-                className="w-full pl-9 pr-8 py-2 bg-slate-900 border border-slate-850 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-500"
-              />
-              <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-blue-500" />
-              {searchingStart && (
-                <RefreshCw className="absolute right-3 top-3 w-3 h-3 text-slate-500 animate-spin" />
-              )}
+    <div className="order-1 bg-slate-950 border-b border-slate-900 p-4 sm:p-5 lg:order-none lg:border-b-0 lg:border-r border-slate-900 text-white flex flex-col w-full shrink-0 lg:h-full lg:overflow-hidden">
+      {/* Scrollable Upper Area */}
+      <div className="flex-1 lg:overflow-y-auto flex flex-col gap-5 pr-0 lg:pr-1 pb-4">
+        {/* Title Section */}
+        <div>
+          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Rota Planla</h2>
+          
+          {/* Start Point Input */}
+          <div className="relative mb-5">
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex flex-wrap items-center justify-between gap-2">
+              <span>Başlangıç Noktası</span>
+              <button
+                onClick={handleUseMyLocation}
+                className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 transition cursor-pointer font-medium"
+                title="Konumumu Kullan"
+              >
+                <Navigation className="w-3 h-3 fill-current" />
+                Konumumu Kullan
+              </button>
+            </label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="relative min-w-0 flex-1">
+                <input
+                  type="text"
+                  value={startQuery}
+                  onChange={handleStartChange}
+                  placeholder="Başlangıç adresi girin..."
+                  className="w-full pl-9 pr-8 py-2 bg-slate-900 border border-slate-850 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-500"
+                />
+                <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-blue-500" />
+                {searchingStart && (
+                  <RefreshCw className="absolute right-3 top-3 w-3 h-3 text-slate-500 animate-spin" />
+                )}
+              </div>
+              <button
+                onClick={() => onSetMapSelectionMode(mapSelectionMode === 'start' ? null : 'start')}
+                className={`px-3 py-2 rounded-lg text-xs font-medium border transition cursor-pointer shrink-0 ${
+                  mapSelectionMode === 'start'
+                    ? 'bg-blue-600/20 border-blue-500 text-blue-400'
+                    : 'bg-slate-900 border-slate-850 text-slate-350 hover:bg-slate-800'
+                }`}
+              >
+                Haritadan Seç
+              </button>
             </div>
-            <button
-              onClick={() => onSetMapSelectionMode(mapSelectionMode === 'start' ? null : 'start')}
-              className={`px-3 py-2 rounded-lg text-xs font-medium border transition cursor-pointer shrink-0 ${
-                mapSelectionMode === 'start'
-                  ? 'bg-blue-600/20 border-blue-500 text-blue-400'
-                  : 'bg-slate-900 border-slate-850 text-slate-350 hover:bg-slate-800'
-              }`}
-            >
-              Haritadan Seç
-            </button>
+
+            {startSuggestions.length > 0 && (
+              <div className="absolute z-50 left-0 right-0 mt-1 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
+                {startSuggestions.map((item, idx) => {
+                  const details = getPlaceDetails(item);
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => selectSuggestion(item, true)}
+                      className="w-full text-left px-3 py-2 text-xs hover:bg-slate-800 border-b border-slate-950 last:border-b-0 text-slate-300 flex flex-col gap-0.5"
+                    >
+                      <span className="font-semibold text-slate-200">
+                        {details.name}
+                      </span>
+                      <span className="text-[10px] text-slate-500 truncate">
+                        {details.shortAddress}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {searchError && startQuery.length >= 3 && startSuggestions.length === 0 && (
+              <div className="absolute z-50 left-0 right-0 mt-1 bg-slate-900 border border-red-900/20 rounded-lg p-2.5 text-xs text-red-400 shadow-2xl">
+                {searchError}
+              </div>
+            )}
           </div>
 
-          {/* Autocomplete suggestions */}
-          {startSuggestions.length > 0 && (
-            <div className="absolute z-50 left-0 right-0 mt-1 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
-              {startSuggestions.map((item, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => selectSuggestion(item, true)}
-                  className="w-full text-left px-3 py-2 text-xs hover:bg-slate-800 border-b border-slate-950 last:border-b-0 text-slate-300 flex flex-col gap-0.5"
-                >
-                  <span className="font-semibold text-slate-200">
-                    {item.display_name.split(',')[0]}
-                  </span>
-                  <span className="text-[10px] text-slate-500 truncate">
-                    {item.display_name}
-                  </span>
-                </button>
-              ))}
+          {/* Destination Point Input */}
+          <div className="relative mb-5">
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              Varış Noktası
+            </label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="relative min-w-0 flex-1">
+                <input
+                  type="text"
+                  value={destQuery}
+                  onChange={handleDestChange}
+                  placeholder="Varış adresi girin..."
+                  className="w-full pl-9 pr-8 py-2 bg-slate-900 border border-slate-850 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-500"
+                />
+                <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-orange-500" />
+                {searchingDest && (
+                  <RefreshCw className="absolute right-3 top-3 w-3 h-3 text-slate-500 animate-spin" />
+                )}
+              </div>
+              <button
+                onClick={() => onSetMapSelectionMode(mapSelectionMode === 'dest' ? null : 'dest')}
+                className={`px-3 py-2 rounded-lg text-xs font-medium border transition cursor-pointer shrink-0 ${
+                  mapSelectionMode === 'dest'
+                    ? 'bg-blue-600/20 border-blue-500 text-blue-400'
+                    : 'bg-slate-900 border-slate-850 text-slate-350 hover:bg-slate-800'
+                }`}
+              >
+                Haritadan Seç
+              </button>
             </div>
-          )}
-          {searchError && startQuery.length >= 3 && startSuggestions.length === 0 && (
-            <div className="absolute z-50 left-0 right-0 mt-1 bg-slate-900 border border-red-900/20 rounded-lg p-2.5 text-xs text-red-400 shadow-2xl">
-              {searchError}
-            </div>
-          )}
-        </div>
 
-        {/* Destination Point Input */}
-        <div className="relative mb-5">
-          <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-            Varış Noktası
-          </label>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <div className="relative min-w-0 flex-1">
-              <input
-                type="text"
-                value={destQuery}
-                onChange={handleDestChange}
-                placeholder="Varış adresi girin..."
-                className="w-full pl-9 pr-8 py-2 bg-slate-900 border border-slate-850 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-500"
-              />
-              <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-orange-500" />
-              {searchingDest && (
-                <RefreshCw className="absolute right-3 top-3 w-3 h-3 text-slate-500 animate-spin" />
-              )}
-            </div>
-            <button
-              onClick={() => onSetMapSelectionMode(mapSelectionMode === 'dest' ? null : 'dest')}
-              className={`px-3 py-2 rounded-lg text-xs font-medium border transition cursor-pointer shrink-0 ${
-                mapSelectionMode === 'dest'
-                  ? 'bg-blue-600/20 border-blue-500 text-blue-400'
-                  : 'bg-slate-900 border-slate-850 text-slate-350 hover:bg-slate-800'
-              }`}
-            >
-              Haritadan Seç
-            </button>
+            {destSuggestions.length > 0 && (
+              <div className="absolute z-50 left-0 right-0 mt-1 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
+                {destSuggestions.map((item, idx) => {
+                  const details = getPlaceDetails(item);
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => selectSuggestion(item, false)}
+                      className="w-full text-left px-3 py-2 text-xs hover:bg-slate-800 border-b border-slate-950 last:border-b-0 text-slate-300 flex flex-col gap-0.5"
+                    >
+                      <span className="font-semibold text-slate-200">
+                        {details.name}
+                      </span>
+                      <span className="text-[10px] text-slate-500 truncate">
+                        {details.shortAddress}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {searchError && destQuery.length >= 3 && destSuggestions.length === 0 && (
+              <div className="absolute z-50 left-0 right-0 mt-1 bg-slate-900 border border-red-900/20 rounded-lg p-2.5 text-xs text-red-400 shadow-2xl">
+                {searchError}
+              </div>
+            )}
           </div>
-
-          {/* Autocomplete suggestions */}
-          {destSuggestions.length > 0 && (
-            <div className="absolute z-50 left-0 right-0 mt-1 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
-              {destSuggestions.map((item, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => selectSuggestion(item, false)}
-                  className="w-full text-left px-3 py-2 text-xs hover:bg-slate-800 border-b border-slate-950 last:border-b-0 text-slate-300 flex flex-col gap-0.5"
-                >
-                  <span className="font-semibold text-slate-200">
-                    {item.display_name.split(',')[0]}
-                  </span>
-                  <span className="text-[10px] text-slate-500 truncate">
-                    {item.display_name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-          {searchError && destQuery.length >= 3 && destSuggestions.length === 0 && (
-            <div className="absolute z-50 left-0 right-0 mt-1 bg-slate-900 border border-red-900/20 rounded-lg p-2.5 text-xs text-red-400 shadow-2xl">
-              {searchError}
-            </div>
-          )}
         </div>
+
+        {/* Geolocation status warning (Turkish localized as requested) */}
+        {!geolocationCoords && !geoLoading && (
+          <div className="bg-slate-900 p-4 rounded-lg border border-slate-850 flex flex-col gap-2">
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Konum alınamadı. Başlangıç noktasını adres arayarak veya haritadan seçerek belirleyebilirsin.
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Geolocation status warning (Turkish localized as requested) */}
-      {!geolocationCoords && !geoLoading && (
-        <div className="bg-slate-900 p-4 rounded-lg border border-slate-850 flex flex-col gap-2">
-          <p className="text-xs text-slate-400 leading-relaxed">
-            Konum alınamadı. Başlangıç noktasını adres arayarak veya haritadan seçerek belirleyebilirsin.
-          </p>
-        </div>
-      )}
-
       {/* Route Analysis / Routing button at the bottom */}
-      <div className="mt-auto pt-4 flex flex-col gap-3">
+      <div className="mt-auto pt-4 flex flex-col gap-3 shrink-0 border-t border-slate-900 bg-slate-950">
         {routeError && (
           <div className="bg-red-950/60 border border-red-900/30 p-3 rounded-lg text-xs text-red-400 leading-normal">
             Rota hesaplanamadı. Lütfen başlangıç ve varış noktalarını kontrol et.
           </div>
         )}
-
-        <RouteSummaryCard
-          routeStats={routeStats}
-          routeStatus={routeStatus}
-          affectedRoad={affectedRoad}
-          className="hidden lg:flex"
-        />
 
         <button
           onClick={onFindRoute}
@@ -394,6 +451,21 @@ export default function SearchPanel({
             ? 'Rota hesaplanıyor...'
             : 'Rota Bul'}
         </button>
+
+        {(!startCoords || !destCoords) && (
+          <p className="text-[10px] text-slate-500 text-center font-medium">
+            Başlangıç ve varış seçildiğinde rota oluşturulur.
+          </p>
+        )}
+
+        <RouteSummaryCard
+          routeStats={routeStats}
+          routeStatus={routeStatus}
+          affectedRoad={affectedRoad}
+          startCoords={startCoords}
+          destCoords={destCoords}
+          className="hidden lg:flex"
+        />
 
         <div className="border-t border-slate-900 pt-3 text-[11px] text-slate-550 flex flex-col gap-1.5">
           <div className="flex justify-between gap-2">

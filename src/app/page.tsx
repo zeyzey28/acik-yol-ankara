@@ -295,7 +295,7 @@ export default function Home() {
   const excludeZonesCount = excludeZones?.features?.length || 0;
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-slate-950 font-sans lg:h-screen lg:overflow-hidden">
+    <div className="min-h-screen overflow-y-auto bg-slate-950 font-sans lg:h-screen lg:overflow-hidden lg:flex lg:flex-col">
       {/* Top Banner Header */}
       <Header
         apiState={apiState}
@@ -306,7 +306,7 @@ export default function Home() {
       />
 
       {/* Main Panel Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr_420px] lg:h-[calc(100vh-96px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr_420px] lg:flex-1 lg:min-h-0">
         
         {/* Left Side Panel: Settings */}
         <SearchPanel
@@ -367,6 +367,8 @@ export default function Home() {
           routeStats={routeStats}
           routeStatus={routeStatus}
           affectedRoad={affectedRoad}
+          startCoords={startCoords}
+          destCoords={destCoords}
           className="order-3 mx-4 mt-4 lg:hidden"
         />
 
