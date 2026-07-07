@@ -20,6 +20,20 @@ The purpose of Açık Yol Ankara is to:
 
 ## Screenshots
 
+### Desktop Overview
+
+![Desktop overview](./public/screenshots/01-home-desktop.png)
+
+### Route Planning
+
+![Route planning form](./public/screenshots/02-route-form.png)
+
+### Route Result
+
+![Route result with warning message](./public/screenshots/03-route-result.png)
+
+### Mobile View
+
 ![Mobile home screen](./public/screenshots/05-mobile.PNG)
 
 ![Mobile route result](./public/screenshots/06-mobile.PNG)
