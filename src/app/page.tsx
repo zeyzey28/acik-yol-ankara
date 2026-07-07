@@ -363,15 +363,6 @@ export default function Home() {
           />
         </div>
 
-        <RouteSummaryCard
-          routeStats={routeStats}
-          routeStatus={routeStatus}
-          affectedRoad={affectedRoad}
-          startCoords={startCoords}
-          destCoords={destCoords}
-          className="order-3 mx-4 mt-4 lg:hidden"
-        />
-
         {/* Right Side Panel: Warnings Listing */}
         <InfoPanel
           warnings={nearbyWarnings}

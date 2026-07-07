@@ -83,7 +83,7 @@ export function RouteSummaryCard({
               : 'text-blue-400'
           }`}>
             {routeStatus === 'alt_not_found' && 'Alternatif rota bulunamadı'}
-            {routeStatus === 'alt_suggested_blocked' && 'Uyarılı rota'}
+            {(routeStatus === 'alt_suggested_blocked' || routeStatus === 'blocked' || routeStatus === 'closed') && 'Uyarılı rota'}
             {(routeStatus === 'near' || routeStatus === 'risky' || routeStatus === 'alt_suggested_risky' || routeStatus === 'alt_suggested') && 'Daha uygun rota önerildi'}
             {(routeStatus === 'suitable' || routeStatus === 'clear') && 'Rota uygun görünüyor'}
             {routeStatus === 'searching_alt' && 'Alternatif rota aranıyor'}
@@ -130,35 +130,102 @@ export function RouteSummaryCard({
   );
 }
 
-// Helper to extract a clean name and short address from Nominatim item
-const getPlaceDetails = (item: any) => {
-  const name = item.display_name.split(',')[0];
-  
-  const addressParts: string[] = [];
+// Helpers to format Nominatim results
+const formatPlaceName = (item: any): string => {
   const addr = item.address || {};
-  
-  // Road or street
-  if (addr.road) addressParts.push(addr.road);
-  else if (addr.pedestrian) addressParts.push(addr.pedestrian);
-  
-  // District/Suburb/Neighborhood
-  const neighborhood = addr.neighbourhood || addr.suburb || addr.city_district || addr.town || addr.village;
-  if (neighborhood) addressParts.push(neighborhood);
-  
-  // City
-  const city = addr.city || addr.province || 'Ankara';
-  if (city) addressParts.push(city);
-  
-  // Ensure we don't repeat the name in the address parts
-  let shortAddress = addressParts.filter((part) => part.toLowerCase() !== name.toLowerCase()).join(', ');
-  
-  // Fallback if shortAddress is empty
+  const name = item.name ||
+               addr.amenity ||
+               addr.shop ||
+               addr.tourism ||
+               addr.leisure ||
+               addr.building ||
+               addr.office ||
+               addr.railway ||
+               addr.highway ||
+               addr.public_transport ||
+               addr.place ||
+               item.display_name.split(',')[0];
+  return name ? name.trim() : 'Bilinmeyen Yer';
+};
+
+const formatPlaceAddress = (item: any): string => {
+  const addr = item.address || {};
+  const parts: string[] = [];
+
+  if (addr.road) parts.push(addr.road);
+  else if (addr.pedestrian) parts.push(addr.pedestrian);
+
+  const neighborhood = addr.neighbourhood || addr.suburb || addr.quarter || addr.city_district || addr.town || addr.village;
+  if (neighborhood) parts.push(neighborhood);
+
+  const city = addr.city || addr.province || addr.state || 'Ankara';
+  if (city && city !== neighborhood) parts.push(city);
+
+  const name = formatPlaceName(item);
+  let shortAddress = parts.filter((part) => part.toLowerCase() !== name.toLowerCase()).join(', ');
+
   if (!shortAddress) {
     const splitName = item.display_name.split(',');
     shortAddress = splitName.slice(1, 4).map((s: string) => s.trim()).join(', ');
   }
-  
-  return { name, shortAddress };
+
+  return shortAddress;
+};
+
+const formatPlaceType = (item: any): string => {
+  const cls = item.class;
+  const typ = item.type;
+  const key = `${cls} ${typ}`.toLowerCase();
+
+  const typeMapping: { [key: string]: string } = {
+    'amenity cafe': 'Kafe',
+    'amenity restaurant': 'Restoran',
+    'amenity pharmacy': 'Eczane',
+    'amenity hospital': 'Hastane',
+    'amenity school': 'Okul',
+    'amenity university': 'Üniversite',
+    'shop mall': 'AVM',
+    'shop supermarket': 'Market',
+    'tourism hotel': 'Otel',
+    'railway station': 'İstasyon',
+    'highway bus_stop': 'Otobüs durağı',
+    'amenity bank': 'Banka',
+    'amenity atm': 'ATM',
+    'amenity fuel': 'Benzinlik',
+    'shop convenience': 'Market',
+    'amenity college': 'Okul',
+    'amenity fast_food': 'Restoran',
+    'amenity bar': 'Kafe/Bar',
+    'amenity pub': 'Pub',
+    'leisure park': 'Park',
+    'highway station': 'İstasyon',
+    'railway halt': 'İstasyon',
+    'railway subway_entrance': 'Metro Girişi',
+    'railway platform': 'Peron',
+    'public_transport platform': 'Otobüs/Metro Peronu',
+    'public_transport station': 'İstasyon'
+  };
+
+  if (typeMapping[key]) {
+    return typeMapping[key];
+  }
+
+  if (cls === 'shop' && typ === 'mall') return 'AVM';
+  if (cls === 'shop') return 'Mağaza';
+  if (cls === 'amenity' && typ === 'cafe') return 'Kafe';
+  if (cls === 'amenity' && typ === 'restaurant') return 'Restoran';
+  if (cls === 'amenity' && typ === 'pharmacy') return 'Eczane';
+  if (cls === 'amenity' && typ === 'hospital') return 'Hastane';
+  if (cls === 'amenity' && typ === 'bank') return 'Banka';
+  if (cls === 'amenity' && typ === 'atm') return 'ATM';
+  if (cls === 'tourism') return 'Turistik Yer';
+  if (cls === 'office') return 'Ofis';
+  if (cls === 'building') return 'Bina';
+  if (cls === 'leisure') return 'Eğlence/Dinlenme';
+  if (cls === 'railway') return 'Raylı Sistem';
+  if (cls === 'highway') return 'Yol';
+
+  return 'Yer';
 };
 
 export default function SearchPanel({
@@ -213,7 +280,7 @@ export default function SearchPanel({
     else setSearchingDest(true);
 
     try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ', Ankara Türkiye')}&format=json&limit=6&addressdetails=1`;
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' Ankara Türkiye')}&format=json&limit=10&addressdetails=1`;
       const response = await fetch(url, {
         headers: {
           'Accept-Language': 'tr-TR,tr;q=0.9,en;q=0.8'
@@ -223,17 +290,17 @@ export default function SearchPanel({
         const data = await response.json();
         if (isStart) {
           setStartSuggestions(data);
-          if (data.length === 0) setSearchError('Sonuç bulunamadı. Daha genel bir yer adı veya mahalle adı deneyebilirsin.');
+          if (data.length === 0) setSearchError('Sonuç bulunamadı. Daha genel bir yer adı, mahalle veya cadde adı deneyebilirsin.');
         } else {
           setDestSuggestions(data);
-          if (data.length === 0) setSearchError('Sonuç bulunamadı. Daha genel bir yer adı veya mahalle adı deneyebilirsin.');
+          if (data.length === 0) setSearchError('Sonuç bulunamadı. Daha genel bir yer adı, mahalle veya cadde adı deneyebilirsin.');
         }
       } else {
-        setSearchError('Sonuç bulunamadı. Daha genel bir yer adı veya mahalle adı deneyebilirsin.');
+        setSearchError('Arama şu anda yapılamadı. Biraz sonra tekrar dene.');
       }
     } catch (e) {
       console.error('Nominatim autocomplete error:', e);
-      setSearchError('Sonuç bulunamadı. Daha genel bir yer adı veya mahalle adı deneyebilirsin.');
+      setSearchError('Arama şu anda yapılamadı. Biraz sonra tekrar dene.');
       if (isStart) setStartSuggestions([]);
       else setDestSuggestions([]);
     } finally {
@@ -264,8 +331,7 @@ export default function SearchPanel({
 
   const selectSuggestion = (item: any, isStart: boolean) => {
     const coords: Coordinates = [parseFloat(item.lon), parseFloat(item.lat)];
-    const details = getPlaceDetails(item);
-    const displayName = `${details.name}, ${details.shortAddress}`;
+    const displayName = `${formatPlaceName(item)}, ${formatPlaceAddress(item)}`;
 
     if (isStart) {
       onSetStart(coords, displayName);
@@ -335,24 +401,24 @@ export default function SearchPanel({
             </div>
 
             {startSuggestions.length > 0 && (
-              <div className="absolute z-50 left-0 right-0 mt-1 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
-                {startSuggestions.map((item, idx) => {
-                  const details = getPlaceDetails(item);
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => selectSuggestion(item, true)}
-                      className="w-full text-left px-3 py-2 text-xs hover:bg-slate-800 border-b border-slate-950 last:border-b-0 text-slate-300 flex flex-col gap-0.5"
-                    >
-                      <span className="font-semibold text-slate-200">
-                        {details.name}
-                      </span>
-                      <span className="text-[10px] text-slate-500 truncate">
-                        {details.shortAddress}
-                      </span>
-                    </button>
-                  );
-                })}
+              <div className="absolute z-50 left-0 right-0 mt-1 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl max-h-72 overflow-y-auto">
+                {startSuggestions.map((item, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => selectSuggestion(item, true)}
+                    className="w-full text-left px-3 py-2.5 hover:bg-slate-800 border-b border-slate-950 last:border-b-0 text-slate-300 flex flex-col gap-1 transition-colors cursor-pointer"
+                  >
+                    <span className="font-semibold text-slate-200 text-xs">
+                      {formatPlaceName(item)}
+                    </span>
+                    <span className="text-[10px] text-slate-400 truncate">
+                      {formatPlaceAddress(item)}
+                    </span>
+                    <span className="mt-0.5 self-start inline-flex items-center rounded bg-blue-950/50 px-1.5 py-0.5 text-[9px] font-semibold text-blue-400 border border-blue-900/30">
+                      {formatPlaceType(item)}
+                    </span>
+                  </button>
+                ))}
               </div>
             )}
             {searchError && startQuery.length >= 3 && startSuggestions.length === 0 && (
@@ -394,24 +460,24 @@ export default function SearchPanel({
             </div>
 
             {destSuggestions.length > 0 && (
-              <div className="absolute z-50 left-0 right-0 mt-1 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
-                {destSuggestions.map((item, idx) => {
-                  const details = getPlaceDetails(item);
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => selectSuggestion(item, false)}
-                      className="w-full text-left px-3 py-2 text-xs hover:bg-slate-800 border-b border-slate-950 last:border-b-0 text-slate-300 flex flex-col gap-0.5"
-                    >
-                      <span className="font-semibold text-slate-200">
-                        {details.name}
-                      </span>
-                      <span className="text-[10px] text-slate-500 truncate">
-                        {details.shortAddress}
-                      </span>
-                    </button>
-                  );
-                })}
+              <div className="absolute z-50 left-0 right-0 mt-1 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl max-h-72 overflow-y-auto">
+                {destSuggestions.map((item, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => selectSuggestion(item, false)}
+                    className="w-full text-left px-3 py-2.5 hover:bg-slate-800 border-b border-slate-950 last:border-b-0 text-slate-300 flex flex-col gap-1 transition-colors cursor-pointer"
+                  >
+                    <span className="font-semibold text-slate-200 text-xs">
+                      {formatPlaceName(item)}
+                    </span>
+                    <span className="text-[10px] text-slate-400 truncate">
+                      {formatPlaceAddress(item)}
+                    </span>
+                    <span className="mt-0.5 self-start inline-flex items-center rounded bg-blue-950/50 px-1.5 py-0.5 text-[9px] font-semibold text-blue-400 border border-blue-900/30">
+                      {formatPlaceType(item)}
+                    </span>
+                  </button>
+                ))}
               </div>
             )}
             {searchError && destQuery.length >= 3 && destSuggestions.length === 0 && (
@@ -419,6 +485,55 @@ export default function SearchPanel({
                 {searchError}
               </div>
             )}
+          </div>
+
+          <button
+            type="button"
+            onClick={onFindRoute}
+            disabled={!startCoords || !destCoords || routeLoading}
+            className="mt-2 w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-blue-600/20 disabled:text-blue-300/50 disabled:border disabled:border-blue-900/40"
+          >
+            {routeStatus === 'searching_alt'
+              ? 'Alternatif rota aranıyor...'
+              : routeLoading
+              ? 'Rota hesaplanıyor...'
+              : 'Rota Bul'}
+          </button>
+
+          {(!startCoords || !destCoords) && (
+            <p className="mt-2 text-[11px] text-slate-500">
+              Başlangıç ve varış seçildiğinde rota oluşturulur.
+            </p>
+          )}
+
+          {routeError && (
+            <div className="bg-red-950/60 border border-red-900/30 p-3 rounded-lg text-xs text-red-400 leading-normal mt-3">
+              Rota hesaplanamadı. Lütfen başlangıç ve varış noktalarını kontrol et.
+            </div>
+          )}
+
+          <RouteSummaryCard
+            routeStats={routeStats}
+            routeStatus={routeStatus}
+            affectedRoad={affectedRoad}
+            startCoords={startCoords}
+            destCoords={destCoords}
+            className="mt-3"
+          />
+
+          <div className="border-t border-slate-900 pt-3 text-[11px] text-slate-550 flex flex-col gap-1.5 mt-3">
+            <div className="flex justify-between gap-2">
+              <span>Başlangıç:</span>
+              <span className="min-w-0 max-w-[60vw] truncate text-right font-mono text-slate-400 lg:max-w-[200px]" title={startAddress || 'Belirlenmedi'}>
+                {startAddress || 'Belirlenmedi'}
+              </span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span>Varış:</span>
+              <span className="min-w-0 max-w-[60vw] truncate text-right font-mono text-slate-400 lg:max-w-[200px]" title={destAddress || 'Belirlenmedi'}>
+                {destAddress || 'Belirlenmedi'}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -430,57 +545,6 @@ export default function SearchPanel({
             </p>
           </div>
         )}
-      </div>
-
-      {/* Route Analysis / Routing button at the bottom */}
-      <div className="mt-auto pt-4 flex flex-col gap-3 shrink-0 border-t border-slate-900 bg-slate-950">
-        {routeError && (
-          <div className="bg-red-950/60 border border-red-900/30 p-3 rounded-lg text-xs text-red-400 leading-normal">
-            Rota hesaplanamadı. Lütfen başlangıç ve varış noktalarını kontrol et.
-          </div>
-        )}
-
-        <button
-          onClick={onFindRoute}
-          disabled={!startCoords || !destCoords || routeLoading}
-          className="w-full py-2.5 px-4 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-500 active:bg-blue-750 disabled:bg-blue-600/20 disabled:text-blue-400/50 disabled:border disabled:border-blue-900/30 disabled:cursor-not-allowed transition flex items-center justify-center gap-1.5 cursor-pointer shadow-lg"
-        >
-          {routeStatus === 'searching_alt'
-            ? 'Alternatif rota aranıyor...'
-            : routeLoading
-            ? 'Rota hesaplanıyor...'
-            : 'Rota Bul'}
-        </button>
-
-        {(!startCoords || !destCoords) && (
-          <p className="text-[10px] text-slate-500 text-center font-medium">
-            Başlangıç ve varış seçildiğinde rota oluşturulur.
-          </p>
-        )}
-
-        <RouteSummaryCard
-          routeStats={routeStats}
-          routeStatus={routeStatus}
-          affectedRoad={affectedRoad}
-          startCoords={startCoords}
-          destCoords={destCoords}
-          className="hidden lg:flex"
-        />
-
-        <div className="border-t border-slate-900 pt-3 text-[11px] text-slate-550 flex flex-col gap-1.5">
-          <div className="flex justify-between gap-2">
-            <span>Başlangıç:</span>
-            <span className="min-w-0 max-w-[60vw] truncate text-right font-mono text-slate-400 lg:max-w-[200px]" title={startAddress || 'Belirlenmedi'}>
-              {startAddress || 'Belirlenmedi'}
-            </span>
-          </div>
-          <div className="flex justify-between gap-2">
-            <span>Varış:</span>
-            <span className="min-w-0 max-w-[60vw] truncate text-right font-mono text-slate-400 lg:max-w-[200px]" title={destAddress || 'Belirlenmedi'}>
-              {destAddress || 'Belirlenmedi'}
-            </span>
-          </div>
-        </div>
       </div>
     </div>
   );
